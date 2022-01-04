@@ -2,6 +2,7 @@ import { ApisauceInstance, create, ApiResponse } from "apisauce"
 import { getGeneralApiProblem } from "./api-problem"
 import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import * as Types from "./api.types"
+import axios from "axios"
 
 /**
  * Manages all requests to the API.
@@ -47,40 +48,43 @@ export class Api {
   /**
    * Gets a list of users.
    */
-  async getUsers(): Promise<Types.GetUsersResult> {
-    // make the api call
-    const response: ApiResponse<any> = await this.apisauce.get(`/users`)
+  // async getUsers(): Promise<Types.GetUsersResult> {
+  //   // make the api call
+  //   const response: ApiResponse<any> = await this.apisauce.get(`/users`)
 
-    // the typical ways to die when calling an api
-    if (!response.ok) {
-      const problem = getGeneralApiProblem(response)
-      if (problem) return problem
-    }
+  //   // the typical ways to die when calling an api
+  //   if (!response.ok) {
+  //     const problem = getGeneralApiProblem(response)
+  //     if (problem) return problem
+  //   }
 
-    const convertUser = raw => {
-      return {
-        id: raw.id,
-        name: raw.name,
-      }
-    }
+  //   const convertUser = raw => {
+  //     return {
+  //       id: raw.id,
+  //       name: raw.name,
+  //     }
+  //   }
 
-    // transform the data into the format we are expecting
-    try {
-      const rawUsers = response.data
-      const resultUsers: Types.User[] = rawUsers.map(convertUser)
-      return { kind: "ok", users: resultUsers }
-    } catch {
-      return { kind: "bad-data" }
-    }
-  }
+  //   // transform the data into the format we are expecting
+  //   try {
+  //     const rawUsers = response.data
+  //     const resultUsers: Types.User[] = rawUsers.map(convertUser)
+  //     return { kind: "ok", users: resultUsers }
+  //   } catch {
+  //     return { kind: "bad-data" }
+  //   }
+  // }
 
   /**
    * Gets a single user by ID
    */
 
-  async getUser(id: string): Promise<Types.GetUserResult> {
+  async getData(page: number): Promise<Types.GetUsersDataResult> {
     // make the api call
-    const response: ApiResponse<any> = await this.apisauce.get(`/users/${id}`)
+    console.log(page);
+
+    const response: ApiResponse<any> = await axios.get(`https://hn.algolia.com/api/v1/search_by_date?tags=story&page=${page}`)
+    // console.log('response', response);
 
     // the typical ways to die when calling an api
     if (!response.ok) {
@@ -90,13 +94,31 @@ export class Api {
 
     // transform the data into the format we are expecting
     try {
-      const resultUser: Types.User = {
-        id: response.data.id,
-        name: response.data.name,
-      }
-      return { kind: "ok", user: resultUser }
+      return { kind: "ok", data: response.data }
     } catch {
       return { kind: "bad-data" }
     }
   }
+
+  // async getUser(id: string): Promise<Types.GetUserResult> {
+  //   // make the api call
+  //   const response: ApiResponse<any> = await this.apisauce.get(`/users/${id}`)
+
+  //   // the typical ways to die when calling an api
+  //   if (!response.ok) {
+  //     const problem = getGeneralApiProblem(response)
+  //     if (problem) return problem
+  //   }
+
+  //   // transform the data into the format we are expecting
+  //   try {
+  //     const resultUser: Types.User = {
+  //       id: response.data.id,
+  //       name: response.data.name,
+  //     }
+  //     return { kind: "ok", user: resultUser }
+  //   } catch {
+  //     return { kind: "bad-data" }
+  //   }
+  // }
 }
